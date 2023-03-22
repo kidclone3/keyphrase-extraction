@@ -10,11 +10,12 @@ RUN apk --update add openjdk8-jre
 ENV JAVA_HOME /opt/jdk
 ENV PATH ${PATH}:${JAVA_HOME}/bin
 
-# Download CoreNLP full Stanford Tagger for English
-RUN wget http://nlp.stanford.edu/software/stanford-corenlp-full-2018-02-27.zip && \
-    unzip stanford-corenlp-full-*.zip && \
-    rm stanford-corenlp-full-*.zip && \
-    mv stanford-corenlp-full-* stanford-corenlp
+# # Download CoreNLP full Stanford Tagger for English
+# RUN wget http://nlp.stanford.edu/software/stanford-corenlp-full-2018-02-27.zip && \
+# ADD stanford-corenlp*.zip stanford-corenlp.zip 
+# RUN unzip stanford-corenlp.zip && \
+#     rm stanford-corenlp.zip
+ADD stanford-corenlp-4.5.3 stanford-corenlp
 
 # Install sent2vec
 RUN apk add --update git g++ make && \
