@@ -11,7 +11,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 # Set environment
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-arm64
 ENV PATH ${PATH}:${JAVA_HOME}/bin
 
 # Download CoreNLP full Stanford Tagger for English
@@ -19,16 +19,19 @@ ENV PATH ${PATH}:${JAVA_HOME}/bin
 # RUN wget http://nlp.stanford.edu/software/stanford-corenlp-full-2018-02-27.zip && \
 #     unzip stanford-corenlp-full-2018-02-27.zip && \
 #     rm stanford-corenlp-full-2018-02-27.zip
-ADD stanford-corenlp-4.5.3 stanford-corenlp
+RUN mkdir /core
+
+ADD stanford-corenlp-4.5.3 /core/stanford-corenlp
 
 ENV PIP_ROOT_USER_ACTION=ignore
 # Install sent2vec
 RUN apt update && \
     apt-get install -y git g++ make && \
+    cd /core && \
     git clone https://github.com/epfml/sent2vec && \
     cd sent2vec && \
     git checkout 9efbc2dd69f6c737c3a752c9dc5fbb4843d578b6
-WORKDIR /sent2vec
+WORKDIR /core/sent2vec
 RUN apt-get install -y libevent-pthreads-2.1-6
 RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
@@ -36,10 +39,10 @@ RUN pip3 install .
 RUN make
 
 # Install requirements
-WORKDIR /app
+WORKDIR /core/app
 ADD requirements.txt .
 # Remove NumPy and SciPy from the requirements before installing the rest
-RUN cd /app && \
+RUN cd /core/app && \
     # sed -i '/^numpy.*$/d' requirements.txt && \
     # sed -i '/^scipy.*$/d' requirements.txt && \
     pip3 install --no-cache-dir -r requirements.txt
@@ -51,7 +54,7 @@ RUN python3 -c "import nltk; nltk.download('punkt')"
 ADD config.ini.template config.ini
 RUN sed -i '6 c\host = localhost' config.ini && \
     sed -i '7 c\port = 9000' config.ini && \
-    sed -i '10 c\model_path = /sent2vec/pretrained_model.bin' config.ini
+    sed -i '10 c\model_path = /core/sent2vec/pretrained_model.bin' config.ini
 
 # Add actual source code
 ADD swisscom_ai swisscom_ai/
